@@ -2608,9 +2608,20 @@ function setCalendarView(field, date) {
 function closeDateCalendar(field) {
   const popover = field.querySelector("[data-date-popover]");
   const trigger = field.querySelector("[data-date-trigger]");
-  if (popover) popover.hidden = true;
+  if (popover) {
+    popover.hidden = true;
+    popover.style.display = "none";
+  }
   if (trigger) trigger.setAttribute("aria-expanded", "false");
   field.classList.remove("is-open");
+
+  let parent = field.parentElement;
+  while (parent && parent !== document.body) {
+    if (parent.classList.contains("has-open-popover")) {
+      parent.classList.remove("has-open-popover");
+    }
+    parent = parent.parentElement;
+  }
 }
 
 function closeAllDateCalendars(exceptField = null) {
@@ -2666,8 +2677,17 @@ function openDateCalendar(field) {
   setCalendarView(field, calendarViewDate(field));
   renderDateCalendar(field);
   popover.hidden = false;
+  popover.style.display = "block";
   trigger.setAttribute("aria-expanded", "true");
   field.classList.add("is-open");
+
+  let parent = field.parentElement;
+  while (parent && parent !== document.body) {
+    if (parent.classList.contains("panel") || parent.classList.contains("command-panel") || parent.classList.contains("entry-form") || parent.tagName === "FORM") {
+      parent.classList.add("has-open-popover");
+    }
+    parent = parent.parentElement;
+  }
 }
 
 function syncDateHints() {
@@ -2689,6 +2709,7 @@ function bindDateHints() {
     field.dataset.dateBound = "true";
 
     const handleToggle = (event) => {
+      if (event.target.closest("[data-date-popover]")) return;
       event.preventDefault();
       event.stopPropagation();
       field.classList.remove("has-date-error");
@@ -2699,7 +2720,7 @@ function bindDateHints() {
       }
     };
 
-    trigger.addEventListener("click", handleToggle);
+    field.addEventListener("click", handleToggle);
     trigger.addEventListener("keydown", (event) => {
       if (event.key === "Enter" || event.key === " ") handleToggle(event);
     });
@@ -2714,6 +2735,7 @@ function bindDateHints() {
         setCalendarView(field, view);
         renderDateCalendar(field);
         popover.hidden = false;
+        popover.style.display = "block";
         trigger.setAttribute("aria-expanded", "true");
         field.classList.add("is-open");
         return;

@@ -2016,7 +2016,7 @@ select option:hover,
 }
 
 .date-field.is-open {
-  z-index: 1000 !important;
+  z-index: 100000 !important;
 }
 
 .date-field.is-open .date-popover {
@@ -2027,10 +2027,11 @@ select option:hover,
 .command-panel:has(.date-field.is-open),
 .entry-form:has(.date-field.is-open),
 .goal-mini-console.in-page-console,
-.goal-input-bay {
-  position: relative;
+.goal-input-bay,
+.has-open-popover {
+  position: relative !important;
   overflow: visible !important;
-  z-index: 990 !important;
+  z-index: 9999 !important;
 }
 
 .date-trigger {
