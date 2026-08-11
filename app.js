@@ -2215,6 +2215,12 @@ function formatCurrentTimeReadout() {
   return new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
 
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", renderTodayReadouts);
+} else {
+  renderTodayReadouts();
+}
+
 function ensureAuthScreen() {
   if (document.querySelector("[data-auth-screen]")) return;
   const screen = document.createElement("section");
@@ -3489,6 +3495,29 @@ function bindButtonMotion() {
   });
 }
 
+function updateNavIndicator() {
+  const navList = document.querySelector(".nav-list");
+  if (!navList) return;
+  let indicator = navList.querySelector(".nav-active-indicator");
+  if (!indicator) {
+    indicator = document.createElement("div");
+    indicator.className = "nav-active-indicator";
+    navList.prepend(indicator);
+  }
+  const activeLink = navList.querySelector("a.nav-item.active") || navList.querySelector("a.nav-item");
+  if (activeLink) {
+    const listRect = navList.getBoundingClientRect();
+    const linkRect = activeLink.getBoundingClientRect();
+    const topOffset = linkRect.top - listRect.top + 2;
+    const height = Math.max(18, linkRect.height - 4);
+    indicator.style.transform = `translateY(${topOffset}px)`;
+    indicator.style.height = `${height}px`;
+    indicator.style.opacity = "1";
+  } else {
+    indicator.style.opacity = "0";
+  }
+}
+
 function bindScrollNav() {
   const links = [...document.querySelectorAll(".nav-list a")];
   if (!links.length) return;
@@ -3529,6 +3558,7 @@ function bindScrollNav() {
         link.removeAttribute("aria-current");
       }
     });
+    updateNavIndicator();
     ticking = false;
   };
 
@@ -3541,6 +3571,7 @@ function bindScrollNav() {
   window.addEventListener("scroll", requestUpdate, { passive: true });
   window.addEventListener("resize", requestUpdate);
   updateActive();
+  window.setTimeout(updateNavIndicator, 100);
 }
 
 /* ==========================================================================
