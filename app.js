@@ -583,8 +583,8 @@ function normalizeCategories(value, options = {}) {
 }
 
 function categoryList() {
-  state.categories = normalizeCategories(state.categories, { allowEmpty: true });
-  return state.categories;
+  state.categories = normalizeCategories(state.categories, { allowEmpty: false });
+  return state.categories.length ? state.categories : [...DEFAULT_CATEGORIES];
 }
 
 function fallbackCategory() {
