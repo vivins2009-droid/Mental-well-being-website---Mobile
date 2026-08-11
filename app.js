@@ -28,6 +28,8 @@ let syncTimer = 0;
 let authInitialized = false;
 
 function isLocalPreview() {
+  const settings = supabaseSettings();
+  if (settings.configured) return false;
   const urlParams = new URLSearchParams(window.location.search);
   if (
     urlParams.get("testAuth") === "1" ||
