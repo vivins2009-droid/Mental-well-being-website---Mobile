@@ -250,6 +250,30 @@ body.page-arriving .panel {
   font-weight: 900;
 }
 
+.back-to-dashboard-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 246, 255, 0.09);
+  border: 1px solid rgba(0, 246, 255, 0.38);
+  color: #00f6ff !important;
+  font-weight: 700;
+  font-size: 0.82rem;
+  padding: 6px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 0 14px rgba(0, 246, 255, 0.15);
+  transition: all 250ms ease;
+}
+
+.back-to-dashboard-btn:hover {
+  background: rgba(0, 246, 255, 0.22);
+  border-color: #00f6ff;
+  color: #ffffff !important;
+  box-shadow: 0 0 22px rgba(0, 246, 255, 0.45);
+  transform: translateY(-1px);
+}
+
 .brand span,
 .mini-profile span,
 .metric-card span,

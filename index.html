@@ -16,7 +16,9 @@
     <!-- Mobile Top Header Bar -->
     <header class="mobile-topbar">
       <div class="mobile-brand">
-        <span class="mobile-logo-icon">⚡</span>
+        <span class="mobile-logo-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f6ff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        </span>
         <div class="mobile-brand-titles">
           <span class="mobile-app-name">Plan Well</span>
           <span class="mobile-app-tag">Mobile App</span>
@@ -24,7 +26,7 @@
       </div>
       <div class="mobile-top-right" style="display: flex; gap: 8px; align-items: center;">
         <button class="ghost-button profile-chip-button compact-button" type="button" data-open-profile-modal title="Edit Profile & Unique ID" style="padding: 4px 8px;">
-          <span>👤</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
         <div class="notification-wrapper" style="position: relative;">
           <button class="ghost-button notification-bell compact-button" type="button" data-notification-trigger title="Notifications &amp; Reminders" style="position: relative; padding: 6px 10px; color: #00f6ff; border: 1px solid rgba(0,246,255,0.3); border-radius: 8px; background: rgba(0,246,255,0.07);">
@@ -297,9 +299,12 @@
 
       <!-- Goals Section -->
       <section class="scroll-section section-preview workspace-section" id="goals-section">
-        <div class="mobile-section-header">
-          <h2>Goals & Missions</h2>
-          <span class="mobile-section-sub">Break big goals into daily steps</span>
+        <div class="mobile-section-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h2>Goals & Missions</h2>
+            <span class="mobile-section-sub">Break big goals into daily steps</span>
+          </div>
+          <a class="text-button link-button compact-button back-to-dashboard-btn" href="#dashboard" onclick="event.preventDefault();navigateToSection('#dashboard')">&larr; Back to Dashboard</a>
         </div>
 
         <article class="panel command-panel mobile-card-panel">
@@ -397,9 +402,12 @@
 
       <!-- Habits Section -->
       <section class="scroll-section section-preview workspace-section" id="habits-section">
-        <div class="mobile-section-header">
-          <h2>Daily Habits</h2>
-          <span class="mobile-section-sub">Track daily routines & streaks</span>
+        <div class="mobile-section-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h2>Daily Habits</h2>
+            <span class="mobile-section-sub">Track daily routines & streaks</span>
+          </div>
+          <a class="text-button link-button compact-button back-to-dashboard-btn" href="#dashboard" onclick="event.preventDefault();navigateToSection('#dashboard')">&larr; Back to Dashboard</a>
         </div>
 
         <aside class="end-day-reminder" data-end-day-reminder hidden aria-live="polite"></aside>
@@ -473,9 +481,12 @@
 
       <!-- Tasks Section -->
       <section class="scroll-section section-preview workspace-section" id="tasks-section">
-        <div class="mobile-section-header">
-          <h2>Tasks & To-Dos</h2>
-          <span class="mobile-section-sub">One-off quick actions</span>
+        <div class="mobile-section-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h2>Tasks & To-Dos</h2>
+            <span class="mobile-section-sub">One-off quick actions</span>
+          </div>
+          <a class="text-button link-button compact-button back-to-dashboard-btn" href="#dashboard" onclick="event.preventDefault();navigateToSection('#dashboard')">&larr; Back to Dashboard</a>
         </div>
 
         <article class="panel command-panel mobile-card-panel">
@@ -543,9 +554,12 @@
 
       <!-- Rewards Section -->
       <section class="scroll-section section-preview workspace-section" id="rewards-section">
-        <div class="mobile-section-header">
-          <h2>XP & Rewards</h2>
-          <span class="mobile-section-sub">Earn XP for completing goals & habits</span>
+        <div class="mobile-section-header" style="display: flex; justify-content: space-between; align-items: flex-start;">
+          <div>
+            <h2>XP & Rewards</h2>
+            <span class="mobile-section-sub">Earn XP for completing goals & habits</span>
+          </div>
+          <a class="text-button link-button compact-button back-to-dashboard-btn" href="#dashboard" onclick="event.preventDefault();navigateToSection('#dashboard')">&larr; Back to Dashboard</a>
         </div>
 
         <article class="panel command-panel mobile-card-panel">

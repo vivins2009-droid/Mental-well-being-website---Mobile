@@ -213,6 +213,10 @@ body::after,
 
 .mobile-section-header {
   margin-bottom: 12px !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: flex-start !important;
+  gap: 10px !important;
 }
 
 .mobile-section-header h2 {
@@ -225,6 +229,31 @@ body::after,
 .mobile-section-sub {
   font-size: 13px !important;
   color: var(--mobile-text-muted) !important;
+}
+
+.back-to-dashboard-btn {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: rgba(0, 246, 255, 0.1) !important;
+  border: 1px solid rgba(0, 246, 255, 0.4) !important;
+  color: #00f6ff !important;
+  font-weight: 700 !important;
+  font-size: 11px !important;
+  padding: 5px 10px !important;
+  border-radius: 8px !important;
+  text-decoration: none !important;
+  box-shadow: 0 0 12px rgba(0, 246, 255, 0.15) !important;
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+.back-to-dashboard-btn:active,
+.back-to-dashboard-btn:hover {
+  background: rgba(0, 246, 255, 0.25) !important;
+  border-color: #00f6ff !important;
+  color: #ffffff !important;
+  box-shadow: 0 0 18px rgba(0, 246, 255, 0.4) !important;
 }
 
 /* 4. CLEAN HOME HERO LAYOUT (Text First, Graphic Below) */

@@ -2728,7 +2728,7 @@ function makeMicroStepRow(form, entry = {}, index = 0) {
       <span class="field-label">Habit link <small style="font-weight:normal;opacity:0.65;margin-left:2px;">(Optional)</small></span>
       <input type="hidden" data-step-routine value="${routineVal}">
       <button type="button" class="micro-step-habit-btn" data-step-routine-btn title="Click to set up a habit for this step on Habits page">
-        ${entry.routineIdea ? `⚡ Linked: ${routineVal}` : `⚡ + Build Habit for Step`}
+        ${entry.routineIdea ? `Linked: ${routineVal}` : `+ Build Habit for Step`}
       </button>
     </div>
     <button class="ghost-button micro-step-remove" type="button" data-remove-micro-step aria-label="Remove step ${index + 1}">Remove</button>
@@ -3151,6 +3151,201 @@ function scrollToHashSection(hash, control) {
   const target = document.querySelector(hash);
   if (!target) return false;
   pulseControl(control);
+function renderGoalSupportPickers() {
+  const options = goalStepOptions();
+  document.querySelectorAll("[data-habit-form]").forEach((form) => {
+    ensureGoalSupportPicker(form);
+    const select = form.querySelector("[data-goal-step-support]");
+    if (!select) return;
+    const previous = select.value;
+    select.innerHTML = `
+      <option value="">No goal step selected</option>
+      ${options.map((option) => `
+        <option value="${escapeHtml(option.value)}">${escapeHtml(option.label)}</option>
+      `).join("")}
+    `;
+    select.value = options.some((option) => option.value === previous) ? previous : "";
+  });
+}
+
+function bindForms() {
+  document.querySelectorAll("[data-category-form]").forEach((categoryForm) => {
+    categoryForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = new FormData(categoryForm);
+      addCategory(form.get("categoryName"));
+      categoryForm.reset();
+      categoryForm.querySelector("input")?.focus();
+    });
+  });
+
+  document.querySelectorAll("[data-goal-form]").forEach((goalForm) => {
+    bindRoutinePlanner(goalForm);
+    goalForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = new FormData(goalForm);
+      const category = String(form.get("category") || fallbackCategory());
+      const steps = stepsFromGoalForm(goalForm, category);
+      state.goals.push({
+        id: uid("goal"),
+        title: String(form.get("title") || "").trim(),
+        category,
+        deadline: String(form.get("deadline") || ""),
+        why: String(form.get("why") || "").trim(),
+        measure: String(form.get("measure") || "").trim(),
+        reward: String(form.get("reward") || "").trim(),
+        steps,
+        complete: false
+      });
+      goalForm.reset();
+      goalForm._routineLinkChoices = [];
+      resetMicroStepBuilder(goalForm);
+      renderRoutineLinkPlanner(goalForm);
+      window.setTimeout(syncDateHints, 0);
+      saveAndRender();
+      showSaveStatus("goal");
+    });
+  });
+
+  document.querySelectorAll("[data-habit-form]").forEach((habitForm) => {
+    ensureWeekdayPicker(habitForm);
+    ensureGoalSupportPicker(habitForm);
+    habitForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = new FormData(habitForm);
+      const support = parseGoalStepValue(form.get("supportedStepKey"));
+      state.habits.push(makeHabit(
+        form.get("name"),
+        form.get("category"),
+        selectedScheduleDays(habitForm),
+        support.goalId,
+        support.stepId
+      ));
+      habitForm.reset();
+      habitForm._scheduleDays = [...ALL_WEEKDAYS];
+      const weeklyInput = habitForm.querySelector('[name="weeklyGoal"]');
+      if (weeklyInput) weeklyInput.value = 7;
+      renderWeekdayPickers();
+      renderGoalSupportPickers();
+      saveAndRender();
+      showSaveStatus("habit");
+    });
+  });
+
+  document.querySelectorAll("[data-task-form]").forEach((taskForm) => {
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!requireTaskDeadline(taskForm)) return;
+      const form = new FormData(taskForm);
+      const support = parseGoalStepValue(form.get("supportedStepKey"));
+      state.tasks.push(makeTask(
+        form.get("title"),
+        form.get("subtext"),
+        form.get("linkedHabitId"),
+        form.get("deadline"),
+        support.goalId,
+        support.stepId,
+        form.get("taskType")
+      ));
+      taskForm.reset();
+      renderTaskHabitOptions();
+      renderTaskGoalOptions();
+      syncDateHints();
+      saveAndRender();
+      taskForm.querySelector("input, textarea, select")?.focus();
+    });
+  });
+}
+
+function saveAndRender() {
+  saveState();
+  render();
+}
+
+function render() {
+  renderTodayReadouts();
+  syncMetrics();
+  renderCategoryOptions();
+  renderWeekdayPickers();
+  renderGoalSupportPickers();
+  renderRoutineLinkPlanners();
+  renderGoals();
+  renderCategories();
+  renderTasks();
+  renderHabits();
+  render21DayHabitsSection();
+  renderNotificationsSection();
+  bindDateHints();
+  syncDateHints();
+}
+
+function toggleEmpty(name, shouldShow) {
+  document.querySelectorAll(`[data-empty="${name}"]`).forEach((element) => {
+    element.hidden = !shouldShow;
+  });
+}
+
+function categoryClass(category) {
+  const map = {
+    Health: "health",
+    School: "study",
+    Hobbies: "creative"
+  };
+  return map[category] || "study";
+}
+
+function formatDate(value) {
+  if (!value) return "";
+  return new Date(`${value}T00:00:00`).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function safeSessionSet(key, value) {
+  try {
+    sessionStorage.setItem(key, value);
+  } catch {
+    // Session storage can be unavailable in some browser modes.
+  }
+}
+
+function safeSessionTake(key) {
+  try {
+    const value = sessionStorage.getItem(key);
+    sessionStorage.removeItem(key);
+    return value;
+  } catch {
+    return null;
+  }
+}
+
+function pulseControl(control) {
+  if (!control || REDUCED_MOTION) return;
+  control.classList.remove("is-activating");
+  void control.offsetWidth;
+  control.classList.add("is-activating");
+  window.setTimeout(() => control.classList.remove("is-activating"), 420);
+}
+
+function pulseSection(section) {
+  if (!section || REDUCED_MOTION) return;
+  section.classList.remove("section-arriving");
+  void section.offsetWidth;
+  section.classList.add("section-arriving");
+  window.setTimeout(() => section.classList.remove("section-arriving"), 1100);
+}
+
+function scrollToHashSection(hash, control) {
+  const target = document.querySelector(hash);
+  if (!target) return false;
+  pulseControl(control);
   history.pushState(null, "", hash);
   target.scrollIntoView({ behavior: REDUCED_MOTION ? "auto" : "smooth", block: "start" });
   pulseSection(target);
@@ -3177,7 +3372,7 @@ function bindLinkMotion() {
         event.ctrlKey ||
         event.shiftKey ||
         event.altKey ||
-        link.target && link.target !== "_self" ||
+        (link.target && link.target !== "_self") ||
         link.hasAttribute("download")
       ) {
         return;
@@ -3276,8 +3471,8 @@ function render21DayHabitsSection() {
       container.innerHTML = `
         <div class="habit-21day-empty-visual">
           <div class="empty-visual-header">
-            <span class="psych-badge-chip">🧠 NEURAL REWIRING</span>
-            <span class="xp-tag">⚡ +500 XP Boost</span>
+            <span class="psych-badge-chip">NEURAL REWIRING</span>
+            <span class="xp-tag">+500 XP Boost</span>
           </div>
           <p class="empty-visual-desc">
             Brain science shows <strong>21 consecutive days</strong> lock a habit into your neural pathway. Start your first habit commitment today!
@@ -3299,12 +3494,12 @@ function render21DayHabitsSection() {
             </div>
             <div class="timeline-connector"></div>
             <div class="timeline-step master-step">
-              <span class="step-num">Day 21 🏆</span>
+              <span class="step-num">Day 21</span>
               <span class="step-label">Mastery</span>
             </div>
           </div>
           <button class="text-button primary-btn start-21day-btn" type="button" data-start-21day-btn>
-            ⚡ + Start 21-Day Habit Protocol
+            + Start 21-Day Habit Protocol
           </button>
         </div>
       `;
@@ -3335,14 +3530,14 @@ function render21DayHabitsSection() {
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <div>
             <strong style="color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;">
-              ${escapeHtml(habit.name)} ${isCompleted21 ? '<span style="background:rgba(0,255,208,0.2);color:#00ffd0;font-size:0.7rem;padding:2px 8px;border-radius:12px;border:1px solid rgba(0,255,208,0.4);">🏆 21-Day Master</span>' : ''}
+              ${escapeHtml(habit.name)} ${isCompleted21 ? '<span style="background:rgba(0,255,208,0.2);color:#00ffd0;font-size:0.7rem;padding:2px 8px;border-radius:12px;border:1px solid rgba(0,255,208,0.4);">21-Day Master</span>' : ''}
             </strong>
             <span style="display: block; font-size: 0.76rem; color: #7caab4; margin-top: 2px;">
-              ${escapeHtml(habit.category)} &bull; <span style="color:#00ffd0;font-weight:700;">🔥 ${streak} day streak</span>
+              ${escapeHtml(habit.category)} &bull; <span style="color:#00ffd0;font-weight:700;">${streak} day streak</span>
             </span>
           </div>
           <button class="ghost-button compact-button" type="button" data-check-21day="${habit.id}" ${doneToday ? "disabled" : ""} style="font-size: 0.78rem; padding: 6px 12px; border-radius: 10px; font-weight: 700; ${doneToday ? 'opacity:0.6;background:rgba(0,255,208,0.1);color:#00ffd0;' : 'color:#00f6ff;border-color:rgba(0,246,255,0.4);'}">
-            ${doneToday ? "✓ Checked Today" : "Check In"}
+            ${doneToday ? "Checked Today" : "Check In"}
           </button>
         </div>
         <div style="display: flex; align-items: center; gap: 10px; margin-top: 8px;">
@@ -3360,7 +3555,7 @@ function render21DayHabitsSection() {
         const newStreak = habitStreak(habit);
         if (newStreak === 21) {
           addNotification({
-            title: `🏆 21-Day Habit Master Unlocked!`,
+            title: `21-Day Habit Master Unlocked!`,
             body: `Incredible! You completed 21 consecutive days of "${habit.name}"! +500 XP Boost awarded!`,
             type: "reward"
           });
@@ -3379,44 +3574,13 @@ function render21DayHabitsSection() {
   });
 }
 
-/* ==========================================================================
-   IN-APP & OS NOTIFICATION SYSTEM
-   ========================================================================== */
-
-function addNotification({ title, body, type = "info" }) {
-  if (!state.notifications) state.notifications = [];
-  const notif = {
-    id: uid("notif"),
-    title,
-    body,
-    type,
-    time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    read: false
-  };
-  state.notifications.unshift(notif);
-  if (state.notifications.length > 30) state.notifications.pop();
-
-  pushOSNotification(title, body);
-}
-
-function pushOSNotification(title, body) {
-  if (state.notificationSettings?.osEnabled && "Notification" in window && Notification.permission === "granted") {
-    try {
-      new Notification(title, { body, icon: "/favicon.ico" });
-    } catch (e) {
-      console.warn("OS Notification failed", e);
-    }
-  }
-}
-
 function evaluateRemindersAndDeadlines() {
-  if (!state.notifications) state.notifications = [];
-  const missedHabits = todayMissedHabits();
-  const overdueTasks = state.tasks.filter((t) => isTaskOverdue(t));
-  const dueGoals = state.goals.filter((g) => {
-    const left = daysLeft(g.deadline);
-    return left !== null && left >= 0 && left <= 2 && goalProgress(g) < 100;
-  });
+  if (!state.habits || !state.tasks || !state.goals) return;
+
+  const today = todayKey();
+  const missedHabits = state.habits.filter((h) => !habitDoneOn(h, today));
+  const overdueTasks = state.tasks.filter((t) => !t.complete && t.dueDate && t.dueDate < today);
+  const dueGoals = state.goals.filter((g) => !g.complete && g.deadline);
 
   const todayStr = dateToValue(new Date());
   const lastCheck = localStorage.getItem("planwell_last_notif_check");
@@ -3425,7 +3589,7 @@ function evaluateRemindersAndDeadlines() {
 
   if (missedHabits.length) {
     addNotification({
-      title: `Daily Habit Reminder ⚡`,
+      title: `Daily Habit Reminder`,
       body: `You have ${missedHabits.length} habit(s) left to complete today (${missedHabits.map((h) => h.name).slice(0, 2).join(", ")}).`,
       type: "habit"
     });
@@ -3433,7 +3597,7 @@ function evaluateRemindersAndDeadlines() {
 
   if (overdueTasks.length) {
     addNotification({
-      title: `Overdue Task Warning ⚠️`,
+      title: `Overdue Task Warning`,
       body: `${overdueTasks.length} task(s) are past due! (e.g. "${overdueTasks[0].title}").`,
       type: "task"
     });
@@ -3441,7 +3605,7 @@ function evaluateRemindersAndDeadlines() {
 
   if (dueGoals.length) {
     addNotification({
-      title: `Goal Deadline Alert 🎯`,
+      title: `Goal Deadline Alert`,
       body: `Goal "${dueGoals[0].title}" deadline is approaching within 48 hours!`,
       type: "goal"
     });
@@ -3517,7 +3681,7 @@ function bindNotificationControls() {
           if (permission === "granted") {
             if (!state.notificationSettings) state.notificationSettings = {};
             state.notificationSettings.osEnabled = true;
-            addNotification({ title: "OS Notifications Enabled 🔔", body: "You will now receive native device notifications for habits, tasks, and goal deadlines.", type: "system" });
+            addNotification({ title: "OS Notifications Enabled", body: "You will now receive native device notifications for habits, tasks, and goal deadlines.", type: "system" });
           } else {
             alert("Notification permission was denied in your browser settings.");
             toggle.checked = false;
@@ -3549,7 +3713,7 @@ function bindNotificationControls() {
         perm = await Notification.requestPermission();
       }
       if (perm === "granted") {
-        new Notification("Plan Well Alert! 🔔", { body: "Daily habits, task reminders, and goal deadline alerts are active." });
+        new Notification("Plan Well Alert", { body: "Daily habits, task reminders, and goal deadline alerts are active." });
       } else {
         alert("Notification permission denied in browser.");
       }
@@ -3615,7 +3779,7 @@ async function initializeApp() {
         const banner = document.createElement("div");
         banner.className = "linked-goal-banner";
         banner.style.cssText = "background:rgba(0,246,255,0.08);border:1px solid rgba(0,246,255,0.3);border-radius:10px;padding:10px 14px;margin-bottom:14px;font-size:0.82rem;color:#a8d7df;";
-        banner.innerHTML = `<strong style="color:#00f6ff;">&#128279; Linked from goal:</strong> <em>${escapeHtml(linkedGoalTitle)}</em>${linkedStepText ? ` &mdash; step: <em>${escapeHtml(linkedStepText)}</em>` : ""}. Set the frequency, schedule and reminders below, then save.`;
+        banner.innerHTML = `<strong style="color:#00f6ff;">Linked from goal:</strong> <em>${escapeHtml(linkedGoalTitle)}</em>${linkedStepText ? ` &mdash; step: <em>${escapeHtml(linkedStepText)}</em>` : ""}. Set the frequency, schedule and reminders below, then save.`;
         habitSection.prepend(banner);
       }
       if (linkedStepText) {
