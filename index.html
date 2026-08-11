@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Plan Well Mobile | Teen Progress Tracker</title>
+  <link rel="stylesheet" href="styles.css?v=mobile">
+  <link rel="stylesheet" href="mobile-styles.css?v=2">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="app.js?v=mobile" defer></script>
+</head>
+<body data-page="dashboard" class="mobile-app-body">
+  <div class="mobile-app-shell">
+
+    <!-- Mobile Top Header Bar -->
+    <header class="mobile-topbar">
+      <div class="mobile-brand">
+        <span class="mobile-logo-icon">⚡</span>
+        <div class="mobile-brand-titles">
+          <span class="mobile-app-name">Plan Well</span>
+          <span class="mobile-app-tag">Mobile App</span>
+        </div>
+      </div>
+      <div class="mobile-top-right" style="display: flex; gap: 8px; align-items: center;">
+        <button class="ghost-button profile-chip-button compact-button" type="button" data-open-profile-modal title="Edit Profile & Unique ID" style="padding: 4px 8px;">
+          <span>👤</span>
+        </button>
+        <div class="notification-wrapper" style="position: relative;">
+          <button class="ghost-button notification-bell compact-button" type="button" data-notification-trigger title="Notifications &amp; Reminders" style="position: relative; padding: 6px 10px; color: #00f6ff; border: 1px solid rgba(0,246,255,0.3); border-radius: 8px; background: rgba(0,246,255,0.07);">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#00f6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span class="notification-badge" data-notification-count hidden style="position: absolute; top: -5px; right: -5px; background: #00ffd0; color: #02070d; font-size: 9px; font-weight: bold; border-radius: 999px; padding: 1px 5px;">0</span>
+          </button>
+          
+          <!-- Mobile Notification Drawer -->
+          <div class="notification-drawer mobile-drawer" data-notification-drawer hidden style="position: absolute; right: 0; top: 40px; width: 280px; background: #09131a; border: 1px solid rgba(0,246,255,0.4); border-radius: 12px; padding: 12px; z-index: 10001; box-shadow: 0 8px 30px rgba(0,0,0,0.95);">
+            <div class="drawer-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 6px;">
+              <strong style="font-size: 12px; color: #00f6ff;">Notifications</strong>
+              <button class="ghost-button compact-button" type="button" data-clear-notifications style="font-size: 10px; padding: 2px 6px;">Clear</button>
+            </div>
+            <div class="notification-settings-bar" style="font-size: 11px; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center;">
+              <label class="toggle-label" style="display: flex; gap: 6px; align-items: center; color: #94a3b8;">
+                <input type="checkbox" data-os-notif-toggle> Allow OS Alerts
+              </label>
+              <button class="ghost-button compact-button" type="button" data-test-os-notif style="font-size: 10px; padding: 2px 6px;">Test Alert</button>
+            </div>
+            <div class="notification-list" data-notification-list style="max-height: 220px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;"></div>
+          </div>
+        </div>
+        <a href="../index.html" class="mobile-view-switcher" title="Switch to Desktop / Computer View">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+            <line x1="8" y1="21" x2="16" y2="21"></line>
+            <line x1="12" y1="17" x2="12" y2="21"></line>
+          </svg>
+          <span>Computer View</span>
+        </a>
+      </div>
+    </header>
+
+    <!-- Mobile Sync & XP Status Strip -->
+    <div class="mobile-status-strip">
+      <div class="mobile-sync-badge">
+        <span class="sync-dot"></span>
+        <span data-sync-status>Checking account...</span>
+      </div>
+      <div class="mobile-xp-chip">
+        <span data-profile-level>Level 1</span>
+        <span data-profile-xp>0 XP</span>
+      </div>
+    </div>
+
+    <!-- Main Mobile Content Viewports -->
+    <main class="mobile-main-container">
+
+      <!-- Home Section -->
+      <section class="scroll-section home-section active-mobile-section" id="home">
+        <div class="home-hero mobile-hero">
+          <!-- Text Content First -->
+          <div class="home-copy">
+            <p class="eyebrow">Teen goal and habit tracker</p>
+            <h1>Plan well</h1>
+            <p class="home-brief">
+              Your personal mobile progress hub. Set goals, track daily habits, manage tasks, and earn rewards anywhere.
+            </p>
+            <div class="home-actions mobile-hero-actions">
+              <a class="text-button link-button primary-btn" href="#dashboard">Dashboard</a>
+              <a class="text-button link-button subtle-btn" href="#goals-section">Goals</a>
+              <a class="text-button link-button subtle-btn" href="#habits-section">Habits</a>
+            </div>
+          </div>
+
+          <!-- Graphic Placed BELOW Text -->
+          <div class="home-hud mobile-hud" aria-hidden="true">
+            <span class="hud-ring ring-one"></span>
+            <span class="hud-ring ring-two"></span>
+            <div class="hud-readout">
+              <strong data-metric="overallProgress">0%</strong>
+              <span>Signal</span>
+            </div>
+            <div class="hud-chip chip-goals">Goals</div>
+            <div class="hud-chip chip-habits">Habits</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Dashboard Section -->
+      <section class="scroll-section" id="dashboard">
+        <div class="mobile-section-header">
+          <div>
+            <h2>Dashboard Overview</h2>
+            <span class="mobile-section-sub">Real-time progress signal</span>
+          </div>
+        </div>
+
+        <section class="dashboard-summary-console mobile-summary-console" data-dashboard-summary aria-label="Dashboard summary">
+          <div class="summary-core-zone mobile-core-zone">
+            <div class="summary-reactor" data-command-ring="overallProgress" aria-hidden="true">
+              <span class="reactor-ring outer"></span>
+              <span class="reactor-ring middle"></span>
+              <span class="reactor-core"></span>
+              <strong data-metric="overallProgress">0%</strong>
+            </div>
+            <div class="summary-core-copy">
+              <p class="eyebrow">Overall Core</p>
+              <h2 data-metric="overallProgress">0%</h2>
+              <div class="progress-track"><span data-bar="overallProgress"></span></div>
+            </div>
+          </div>
+
+          <div class="summary-lanes mobile-summary-lanes">
+            <!-- 1st: Tasks (Action Lane) -->
+            <article class="summary-lane tasks-lane" data-summary-tasks>
+              <div class="summary-lane-main">
+                <div class="summary-lane-heading">
+                  <div>
+                    <p class="eyebrow">Tasks</p>
+                    <h3>Action Lane</h3>
+                  </div>
+                  <a class="text-button link-button compact-button" href="#tasks-section" onclick="event.preventDefault();navigateToSection('#tasks-section')">Open</a>
+                </div>
+                <div class="summary-cell-grid mobile-grid">
+                  <div class="summary-cell"><span>Open</span><strong data-metric="openTasks">0</strong></div>
+                  <div class="summary-cell"><span>Done</span><strong data-metric="tasksDone">0</strong></div>
+                  <div class="summary-cell wide-cell">
+                    <span>Next Task</span>
+                    <strong data-summary-next-task>No tasks yet</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 2nd: Habits (Cadence Lane) -->
+            <article class="summary-lane habits-lane" data-summary-habits>
+              <div class="summary-lane-main">
+                <div class="summary-lane-heading">
+                  <div>
+                    <p class="eyebrow">Habits</p>
+                    <h3>Cadence Lane</h3>
+                  </div>
+                  <a class="text-button link-button compact-button" href="#habits-section" onclick="event.preventDefault();navigateToSection('#habits-section')">Open</a>
+                </div>
+                <div class="summary-cell-grid mobile-grid">
+                  <div class="summary-cell"><span>Score</span><strong data-metric="habitScore">0%</strong></div>
+                  <div class="summary-cell"><span>Done Today</span><strong data-metric="checksCompleted">0</strong></div>
+                  <div class="summary-cell"><span>Best Streak</span><strong data-metric="bestStreak">0 days</strong></div>
+                  <div class="summary-cell wide-cell">
+                    <span>Missed Today</span>
+                    <strong data-metric="missedToday">0</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 3rd: Goals (Mission Lane) -->
+            <article class="summary-lane goals-lane" data-summary-goals>
+              <div class="summary-lane-main">
+                <div class="summary-lane-heading">
+                  <div>
+                    <p class="eyebrow">Goals</p>
+                    <h3>Mission Lane</h3>
+                  </div>
+                  <a class="text-button link-button compact-button" href="#goals-section" onclick="event.preventDefault();navigateToSection('#goals-section')">Open</a>
+                </div>
+                <div class="summary-cell-grid mobile-grid">
+                  <div class="summary-cell"><span>Active</span><strong data-metric="activeGoals">0</strong></div>
+                  <div class="summary-cell"><span>Achieved</span><strong data-metric="goalsAchieved">0 / 0</strong></div>
+                  <div class="summary-cell"><span>Due Soon</span><strong data-metric="dueSoon">0</strong></div>
+                  <div class="summary-cell wide-cell">
+                    <span>Top Priority</span>
+                    <strong data-summary-top-goal>No goals yet</strong>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <!-- 4th: Rewards (Unlock Lane) -->
+            <article class="summary-lane rewards-lane" data-summary-rewards>
+              <div class="summary-lane-main">
+                <div class="summary-lane-heading">
+                  <div>
+                    <p class="eyebrow">Rewards</p>
+                    <h3>Unlock Lane</h3>
+                  </div>
+                  <a class="text-button link-button compact-button" href="#rewards-section" onclick="event.preventDefault();navigateToSection('#rewards-section')">Open</a>
+                </div>
+                <div class="summary-cell-grid mobile-grid">
+                  <div class="summary-cell"><span>XP</span><strong data-metric="weeklyXp">0</strong></div>
+                  <div class="summary-cell"><span>Level</span><strong data-profile-level>Level 1</strong></div>
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Mobile Time Tracker Panel -->
+        <article class="panel command-panel mobile-card-panel time-tracker-panel" style="margin-top: 16px;">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Activity Timer</p>
+              <h3>Time Tracker</h3>
+            </div>
+          </div>
+          <div class="time-tracker-dashboard">
+            <div class="time-tracker-clock-container">
+              <div class="time-tracker-digital-clock" data-tracker-clock>00:00:00</div>
+              <div class="time-tracker-state-badge" data-tracker-state-badge>Idle</div>
+            </div>
+            
+            <form class="entry-form time-tracker-form" data-time-tracker-form>
+              <label>
+                Activity Description
+                <input name="activityTitle" type="text" placeholder="What are you working on? (e.g. Study Chemistry)" required>
+              </label>
+              
+              <label>
+                Associate with Goal / Habit / Task
+                <select name="associatedItem" data-tracker-select>
+                  <option value="">General Activity (Unlinked)</option>
+                </select>
+              </label>
+              
+              <div class="time-tracker-buttons">
+                <button class="text-button start-btn" type="button" data-tracker-start>Start</button>
+                <button class="ghost-button pause-btn" type="button" data-tracker-pause style="display: none;">Pause</button>
+                <button class="ghost-button reset-btn" type="button" data-tracker-reset>Reset</button>
+                <button class="text-button log-btn" type="button" data-tracker-log disabled>Log Time</button>
+              </div>
+            </form>
+            
+            <div class="time-tracker-history-section">
+              <div class="history-header">
+                <strong>Logged Sessions</strong>
+                <span data-metric="totalTrackedTime">0h 0m total</span>
+              </div>
+              <div class="time-tracker-history-list" data-tracker-history></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- Mobile 21-Day Habit Commitment Protocol Card -->
+        <article class="panel command-panel mobile-card-panel habit-21day-panel" style="margin-top: 16px;">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Psychology Protocol</p>
+              <h3>21-Day Habit Commitment</h3>
+            </div>
+          </div>
+          <div class="habit-21day-widget-body">
+            <p class="section-subtext" style="color: #94a3b8; font-size: 0.8rem; margin-bottom: 12px;">
+              Maintain 21 consecutive days to build a permanent neural habit loop and earn a <strong>+500 XP Boost</strong>!
+            </p>
+            <div class="habit-21day-list" data-21day-habits-container></div>
+          </div>
+        </article>
+
+        <!-- Mobile Social & Friends Leaderboard Card -->
+        <article class="panel command-panel mobile-card-panel friends-social-panel" style="margin-top: 16px;">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Social Network</p>
+              <h3>Friends Leaderboard</h3>
+            </div>
+          </div>
+          <div class="friends-widget-body">
+            <form class="add-friend-form" data-add-friend-form style="display: flex; gap: 8px; margin-bottom: 14px;">
+              <input name="friendHandle" type="text" placeholder="Add handle (e.g. @sam_pro)" required style="flex: 1; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.3); border: 1px solid rgba(0,229,255,0.2); color: #fff; font-size: 13px;">
+              <button class="text-button compact-button" type="submit">Add</button>
+            </form>
+            <div class="friends-list" data-friends-list></div>
+          </div>
+        </article>
+      </section>
+
+      <!-- Goals Section -->
+      <section class="scroll-section section-preview workspace-section" id="goals-section">
+        <div class="mobile-section-header">
+          <h2>Goals & Missions</h2>
+          <span class="mobile-section-sub">Break big goals into daily steps</span>
+        </div>
+
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">New Goal</p>
+              <h3>Create a Goal</h3>
+            </div>
+          </div>
+          <form class="entry-form compact-goal-form" data-goal-form>
+            <label>
+              Goal Name
+              <input name="title" type="text" placeholder="What do you want to achieve?" required>
+            </label>
+
+            <label>
+              Area of Life
+              <select name="category" required>
+                <option value="Health">Health</option>
+                <option value="School">School</option>
+                <option value="Money">Money</option>
+                <option value="Friends">Friends</option>
+                <option value="Hobbies">Hobbies</option>
+                <option value="Home">Home</option>
+                <option value="Adventure">Adventure</option>
+                <option value="Community">Community</option>
+              </select>
+            </label>
+
+            <div class="form-field date-field" data-date-field>
+              <label for="goal-deadline-mobile">Deadline</label>
+              <button class="date-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false">
+                <span class="date-value" data-date-value id="goal-date-hint-mobile">Pick a deadline</span>
+                <span class="date-icon" aria-hidden="true"></span>
+              </button>
+              <input id="goal-deadline-mobile" name="deadline" type="hidden" data-date-input>
+              <div class="date-popover" data-date-popover hidden role="dialog" aria-label="Choose deadline"></div>
+            </div>
+
+            <label class="full-width">
+              Micro Steps (one per line)
+              <textarea name="steps" rows="3" placeholder="Step 1&#10;Step 2"></textarea>
+            </label>
+
+            <div class="routine-link-planner full-width" data-routine-link-planner aria-live="polite"></div>
+
+            <button class="text-button mobile-submit-btn" type="submit">Save Goal</button>
+          </form>
+
+          <div class="save-guidance compact-guidance" data-save-status="goal" hidden aria-live="polite">
+            <div>
+              <strong>Goal saved!</strong>
+            </div>
+            <div class="guide-actions">
+              <button class="ghost-button" type="button" data-add-another="goal">Add another</button>
+              <a class="text-button link-button" href="#dashboard">Dashboard</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Categories & Areas of Life -->
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Categories</p>
+              <h3>Areas of Life</h3>
+            </div>
+          </div>
+          <form class="category-form" data-category-form>
+            <label>
+              Add Area
+              <input name="categoryName" type="text" placeholder="e.g., Coding, Fitness">
+            </label>
+            <button class="text-button" type="submit">Add Area</button>
+          </form>
+          <p class="category-status" data-category-status aria-live="polite"></p>
+          <div class="category-list" data-category-list></div>
+        </article>
+
+        <!-- Goals Queue -->
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Active Goals</p>
+              <h3>Mission Queue</h3>
+            </div>
+          </div>
+          <div class="goal-list" data-goal-list="goals"></div>
+          <div class="empty-state" data-empty="goalsPage">
+            <strong>No goals added yet.</strong>
+            <span>Create your first goal above to start.</span>
+          </div>
+        </article>
+      </section>
+
+      <!-- Habits Section -->
+      <section class="scroll-section section-preview workspace-section" id="habits-section">
+        <div class="mobile-section-header">
+          <h2>Daily Habits</h2>
+          <span class="mobile-section-sub">Track daily routines & streaks</span>
+        </div>
+
+        <aside class="end-day-reminder" data-end-day-reminder hidden aria-live="polite"></aside>
+
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">New Habit</p>
+              <h3>Add Daily Habit</h3>
+            </div>
+          </div>
+          <form class="entry-form habit-entry-form" data-habit-form>
+            <label>
+              Habit Name
+              <input name="name" type="text" placeholder="e.g. Read 20 pages" required>
+            </label>
+            <label class="category-field">
+              Category
+              <select name="category" aria-label="Habit category">
+                <option value="Health">Health</option>
+                <option value="School">School</option>
+                <option value="Hobbies">Hobbies</option>
+                <option value="Home">Home</option>
+                <option value="Friends">Friends</option>
+              </select>
+              <span class="category-picker" data-category-picker aria-label="Choose habit category"></span>
+            </label>
+            <button class="text-button mobile-submit-btn" type="submit">Save Habit</button>
+          </form>
+
+          <div class="save-guidance compact-guidance" data-save-status="habit" hidden aria-live="polite">
+            <div>
+              <strong>Habit saved!</strong>
+            </div>
+            <div class="guide-actions">
+              <button class="ghost-button" type="button" data-add-another="habit">Add another</button>
+              <a class="text-button link-button" href="#dashboard">Dashboard</a>
+            </div>
+          </div>
+        </article>
+
+        <!-- Daily Habit Checklist -->
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Checklist</p>
+              <h3>Daily Habit Log</h3>
+            </div>
+          </div>
+          <div class="habit-table" aria-label="Daily habit checklist" data-habit-table></div>
+          <div class="empty-state" data-empty="habitsPage">
+            <strong>No habits added yet.</strong>
+            <span>Add a habit above to check off daily.</span>
+          </div>
+        </article>
+
+        <!-- Streaks -->
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Streaks</p>
+              <h3>Momentum Tracker</h3>
+            </div>
+          </div>
+          <div class="streak-list" data-streak-list></div>
+          <div class="empty-state compact" data-empty="streaks">
+            <strong>No streaks yet.</strong>
+          </div>
+        </article>
+      </section>
+
+      <!-- Tasks Section -->
+      <section class="scroll-section section-preview workspace-section" id="tasks-section">
+        <div class="mobile-section-header">
+          <h2>Tasks & To-Dos</h2>
+          <span class="mobile-section-sub">One-off quick actions</span>
+        </div>
+
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">New Task</p>
+              <h3>Add To-Do</h3>
+            </div>
+          </div>
+          <form class="entry-form task-entry-form" data-task-form>
+            <label>
+              Task Title
+              <input name="title" type="text" placeholder="e.g. Physics Homework" required>
+            </label>
+            <div class="form-field date-field deadline-date-field" data-date-field data-required-date>
+              <label for="task-deadline-mobile">Deadline</label>
+              <button class="date-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false">
+                <span class="date-value" data-date-value id="task-date-hint-mobile">Pick deadline</span>
+                <span class="date-icon" aria-hidden="true"></span>
+              </button>
+              <input id="task-deadline-mobile" name="deadline" type="hidden" data-date-input>
+              <div class="date-popover" data-date-popover hidden role="dialog" aria-label="Choose task deadline"></div>
+            </div>
+            <label>
+              Task Type
+              <select name="taskType">
+                <option value="task">One-off task</option>
+                <option value="habit">Habit-linked task</option>
+              </select>
+            </label>
+            <label>
+              Details
+              <textarea name="subtext" rows="2" placeholder="Optional details..."></textarea>
+            </label>
+            <label>
+              Link to Habit
+              <select name="linkedHabitId" data-habit-link-select>
+                <option value="">No linked habit</option>
+              </select>
+            </label>
+            <label>
+              Supports Goal Step
+              <select name="supportedStepKey" data-task-goal-support>
+                <option value="">No goal step selected</option>
+              </select>
+            </label>
+            <button class="text-button mobile-submit-btn" type="submit">Save Task</button>
+          </form>
+        </article>
+
+        <!-- Task List Board -->
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Task Board</p>
+              <h3>Action List</h3>
+            </div>
+          </div>
+          <div class="task-list" data-task-list></div>
+          <div class="empty-state" data-empty="tasks">
+            <strong>No tasks added yet.</strong>
+          </div>
+        </article>
+      </section>
+
+      <!-- Rewards Section -->
+      <section class="scroll-section section-preview workspace-section" id="rewards-section">
+        <div class="mobile-section-header">
+          <h2>XP & Rewards</h2>
+          <span class="mobile-section-sub">Earn XP for completing goals & habits</span>
+        </div>
+
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Level Progress</p>
+              <h3>XP Summary</h3>
+            </div>
+          </div>
+          <div class="reward-grid mobile-reward-grid">
+            <div class="reward-card unlocked">
+              <span class="reward-cost">XP Bank</span>
+              <strong data-metric="rewardProgress">0 XP earned</strong>
+            </div>
+            <div class="reward-card">
+              <span class="reward-cost">Next Unlock</span>
+              <strong data-metric="nextUnlock">0%</strong>
+              <div class="progress-track"><span data-bar="nextUnlock"></span></div>
+            </div>
+            <div class="reward-card">
+              <span class="reward-cost">Level</span>
+              <strong data-profile-level>Level 1</strong>
+              <p data-profile-xp>0 XP</p>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel command-panel mobile-card-panel">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Rules</p>
+              <h3>XP Earning Rules</h3>
+            </div>
+          </div>
+          <div class="rule-list">
+            <div class="rule-row"><strong>Goals Added</strong><span data-metric="activeGoals">0</span></div>
+            <div class="rule-row"><strong>Goal Steps Done</strong><span data-metric="stepsFinishedShort">0</span></div>
+            <div class="rule-row"><strong>Habits Added</strong><span data-metric="habitCount">0</span></div>
+            <div class="rule-row"><strong>Habit Checks Done</strong><span data-metric="checksCompleted">0</span></div>
+            <div class="rule-row"><strong>Tasks Finished</strong><span data-metric="tasksDone">0</span></div>
+          </div>
+        </article>
+      </section>
+
+    </main>
+
+    <!-- Mobile Fixed Bottom Navigation Bar -->
+    <nav class="mobile-bottom-nav" aria-label="Mobile Bottom Navigation">
+      <a href="#dashboard" class="mobile-nav-item active" data-nav-target="dashboard">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="3" width="7" height="9"></rect>
+          <rect x="14" y="3" width="7" height="5"></rect>
+          <rect x="14" y="12" width="7" height="9"></rect>
+          <rect x="3" y="16" width="7" height="5"></rect>
+        </svg>
+        <span>Dash</span>
+      </a>
+      <a href="#goals-section" class="mobile-nav-item" data-nav-target="goals-section">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <circle cx="12" cy="12" r="6"></circle>
+          <circle cx="12" cy="12" r="2"></circle>
+        </svg>
+        <span>Goals</span>
+      </a>
+      <a href="#habits-section" class="mobile-nav-item" data-nav-target="habits-section">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="9 11 12 14 22 4"></polyline>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+        </svg>
+        <span>Habits</span>
+      </a>
+      <a href="#tasks-section" class="mobile-nav-item" data-nav-target="tasks-section">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        <span>Tasks</span>
+      </a>
+      <a href="#rewards-section" class="mobile-nav-item" data-nav-target="rewards-section">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span>Rewards</span>
+      </a>
+    </nav>
+  </div>
+
+  <script>
+    // Make navigateToSection globally accessible for onclick attributes
+    let navigateToSection;
+    document.addEventListener('DOMContentLoaded', () => {
+      const sections = ['home', 'dashboard', 'goals-section', 'habits-section', 'tasks-section', 'rewards-section'];
+      
+      navigateToSection = function(targetId) {
+        const cleanId = targetId.replace('#', '');
+        if (!sections.includes(cleanId)) return;
+        
+        sections.forEach(id => {
+          const sec = document.getElementById(id);
+          if (sec) {
+            sec.classList.remove('active-mobile-section');
+            sec.style.setProperty('display', 'none', 'important');
+          }
+        });
+        
+        const activeSec = document.getElementById(cleanId);
+        if (activeSec) {
+          activeSec.classList.add('active-mobile-section');
+          activeSec.style.setProperty('display', 'flex', 'important');
+          activeSec.style.setProperty('flex-direction', 'column', 'important');
+        }
+        
+        // Highlight active nav item
+        document.querySelectorAll('.mobile-bottom-nav a').forEach(navLink => {
+          const href = navLink.getAttribute('href') || '';
+          if (href === '#' + cleanId) {
+            navLink.classList.add('active');
+          } else {
+            navLink.classList.remove('active');
+          }
+        });
+        
+        // Scroll content area back to top
+        const container = document.querySelector('.mobile-main-container');
+        if (container) container.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
+      
+      // Bind click events on bottom nav items
+      document.querySelectorAll('.mobile-bottom-nav a').forEach(link => {
+        link.addEventListener('click', (e) => {
+          const href = link.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            e.preventDefault();
+            navigateToSection(href);
+            window.location.hash = href;
+          }
+        });
+      });
+      
+      // Bind click events on dashboard section links
+      document.addEventListener('click', (e) => {
+        const dashboardLink = e.target.closest('[data-dashboard-section-link]');
+        if (dashboardLink) {
+          const href = dashboardLink.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            e.preventDefault();
+            navigateToSection(href);
+            window.location.hash = href;
+          }
+        }
+        
+        const heroLink = e.target.closest('.mobile-hero-actions a, .home-actions a');
+        if (heroLink) {
+          const href = heroLink.getAttribute('href');
+          if (href && href.startsWith('#')) {
+            e.preventDefault();
+            navigateToSection(href);
+            window.location.hash = href;
+          }
+        }
+      });
+      
+      // Initialize tab: Check hash first, default to dashboard
+      const initialHash = window.location.hash || '#dashboard';
+      navigateToSection(initialHash);
+    });
+  </script>
+  <!-- Edit Profile & Unique Handle Modal -->
+  <div class="modal-overlay" data-profile-modal hidden style="position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); place-items: center; z-index: 10000; padding: 20px;">
+    <div class="modal-card" style="background: #09131a; border: 1px solid rgba(0,246,255,0.4); border-radius: 16px; padding: 20px; max-width: 360px; width: 100%; box-shadow: 0 0 30px rgba(0,246,255,0.25);">
+      <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="margin: 0; color: #00f6ff; font-size: 1.1rem;">Edit Profile & User ID</h3>
+        <button class="ghost-button compact-button" type="button" data-close-profile-modal style="font-size: 1.2rem; padding: 2px 8px;">×</button>
+      </div>
+      <form data-edit-profile-form style="display: grid; gap: 12px;">
+        <label style="display: flex; flex-direction: column; gap: 4px; color: #a8d7df; font-size: 0.8rem; font-weight: bold;">
+          Display Name (Username)
+          <input name="username" type="text" placeholder="e.g. Alex Smith" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,229,255,0.3); color: #fff; box-sizing: border-box;">
+        </label>
+        <label style="display: flex; flex-direction: column; gap: 4px; color: #a8d7df; font-size: 0.8rem; font-weight: bold;">
+          Unique User ID (Handle)
+          <input name="handle" type="text" placeholder="e.g. @alex_smith_01" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,229,255,0.3); color: #fff; box-sizing: border-box;">
+          <small style="color: #94a3b8; font-size: 0.7rem; font-weight: normal; margin-top: 2px;">Your unique User ID is used by friends to search and add you.</small>
+        </label>
+        <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
+          <button class="ghost-button compact-button" type="button" data-close-profile-modal>Cancel</button>
+          <button class="text-button compact-button" type="submit">Save</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</body>
+</html>
