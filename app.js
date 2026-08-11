@@ -28,6 +28,15 @@ let syncTimer = 0;
 let authInitialized = false;
 
 function isLocalPreview() {
+  const urlParams = new URLSearchParams(window.location.search);
+  if (
+    urlParams.get("testAuth") === "1" ||
+    urlParams.get("showAuth") === "1" ||
+    urlParams.get("login") === "1" ||
+    localStorage.getItem("planwell_force_auth") === "1"
+  ) {
+    return false;
+  }
   const host = window.location.hostname;
   return (
     host === "localhost" ||
@@ -2242,6 +2251,7 @@ function ensureAuthScreen() {
       </form>
 
       <p class="auth-status" data-auth-status aria-live="polite"></p>
+      <button class="ghost-button compact-button" type="button" data-close-auth-screen style="margin-top: 6px; font-size: 0.8rem; border-color: rgba(0,246,255,0.3); color: #00f6ff;">&larr; Return to App / Dashboard</button>
     </article>
   `;
   document.body.prepend(screen);
@@ -2252,6 +2262,15 @@ function bindAuthControls() {
   if (!screen || screen.dataset.bound === "1") return;
   screen.dataset.bound = "1";
   let mode = "login";
+
+  screen.querySelector("[data-close-auth-screen]")?.addEventListener("click", () => {
+    localStorage.removeItem("planwell_force_auth");
+    const url = new URL(window.location.href);
+    url.searchParams.delete("testAuth");
+    url.searchParams.delete("showAuth");
+    url.searchParams.delete("login");
+    window.location.href = url.pathname + url.hash;
+  });
 
   const setMode = (nextMode) => {
     mode = nextMode;
@@ -2392,6 +2411,11 @@ function renderAccountControls() {
 }
 
 document.addEventListener("click", (event) => {
+  if (event.target.closest("[data-trigger-auth-preview]")) {
+    localStorage.setItem("planwell_force_auth", "1");
+    window.location.href = window.location.pathname + "?showAuth=1";
+    return;
+  }
   if (event.target.closest("[data-account-chip]")) return;
   document.querySelectorAll("[data-profile-menu]").forEach((menu) => {
     menu.hidden = true;

@@ -749,9 +749,12 @@
           <input name="handle" type="text" placeholder="e.g. @alex_smith_01" required style="width: 100%; padding: 8px; border-radius: 8px; background: rgba(0,0,0,0.5); border: 1px solid rgba(0,229,255,0.3); color: #fff; box-sizing: border-box;">
           <small style="color: #94a3b8; font-size: 0.7rem; font-weight: normal; margin-top: 2px;">Your unique User ID is used by friends to search and add you.</small>
         </label>
-        <div class="modal-actions" style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px;">
-          <button class="ghost-button compact-button" type="button" data-close-profile-modal>Cancel</button>
-          <button class="text-button compact-button" type="submit">Save</button>
+        <div class="modal-actions" style="display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 12px; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 10px;">
+          <button class="ghost-button compact-button" type="button" data-trigger-auth-preview style="font-size: 0.72rem; padding: 4px 8px; border-color: rgba(0,246,255,0.4); color: #00f6ff;">Preview Auth Screen</button>
+          <div style="display: flex; gap: 8px;">
+            <button class="ghost-button compact-button" type="button" data-close-profile-modal>Cancel</button>
+            <button class="text-button compact-button" type="submit">Save</button>
+          </div>
         </div>
       </form>
     </div>
