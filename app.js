@@ -291,9 +291,25 @@ function userEmail() {
 
 function setAuthVisibility() {
   const isConfigured = Boolean(supabaseClient) || isLocalPreview();
-  const isAuth = Boolean(currentUser) || isLocalPreview();
-  document.body.classList.toggle("is-authenticated", isAuth);
-  document.body.classList.toggle("is-logged-out", !isAuth);
+  const isAuth = Boolean(currentUser);
+  
+  if (window.isAuthPreviewActive) {
+    ensureAuthScreen();
+    bindAuthControls();
+    const authScreen = document.querySelector("[data-auth-screen]");
+    if (authScreen) {
+      authScreen.style.setProperty("display", "grid", "important");
+      authScreen.hidden = false;
+      if (authScreen.querySelector("[data-auth-setup]")) {
+        authScreen.querySelector("[data-auth-setup]").hidden = isConfigured;
+      }
+    }
+    renderAccountControls();
+    return;
+  }
+
+  document.body.classList.toggle("is-authenticated", isAuth || isLocalPreview());
+  document.body.classList.toggle("is-logged-out", !isAuth && !isLocalPreview());
   document.body.classList.toggle("is-auth-unconfigured", !isConfigured && !isLocalPreview());
   document.body.classList.remove("is-auth-loading");
 
@@ -301,8 +317,8 @@ function setAuthVisibility() {
   if (authScreen) {
     if (isLocalPreview() || isAuth) {
       authScreen.style.setProperty("display", "none", "important");
-      authScreen.remove();
     } else {
+      authScreen.style.removeProperty("display");
       authScreen.hidden = false;
     }
     if (authScreen.querySelector("[data-auth-setup]")) {
@@ -2201,6 +2217,10 @@ function renderTodayReadouts() {
   });
 }
 
+function formatTodayReadout() {
+  return new Date().toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
+}
+
 function formatCurrentTimeReadout() {
   return new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
 }
@@ -2393,6 +2413,7 @@ function renderAccountControls() {
         <span>${escapeHtml(userEmail() || "Signed in")}</span>
         <em data-sync-status>${escapeHtml(syncStatus)}</em>
       </div>
+      <button class="text-button compact-button" type="button" data-open-auth-screen style="width: 100%; margin-bottom: 8px; font-size: 0.78rem;">Log in / Sign in with Google</button>
       <button class="delete-button profile-signout-button" type="button" data-sign-out>Log out</button>
     </div>
   `;
@@ -2426,9 +2447,9 @@ function renderAccountControls() {
 }
 
 document.addEventListener("click", (event) => {
-  if (event.target.closest("[data-trigger-auth-preview]")) {
-    localStorage.setItem("planwell_force_auth", "1");
-    window.location.href = window.location.pathname + "?showAuth=1";
+  if (event.target.closest("[data-open-auth-screen], [data-trigger-auth-preview], .mobile-login-btn, [data-auth-google-trigger]")) {
+    event.preventDefault();
+    openAuthScreen();
     return;
   }
   if (event.target.closest("[data-account-chip]")) return;
@@ -3473,27 +3494,54 @@ function bindButtonMotion() {
 }
 
 function bindScrollNav() {
-  const links = [...document.querySelectorAll('.nav-list a[href^="#"]')];
+  const links = [...document.querySelectorAll(".nav-list a")];
   if (!links.length) return;
-  const sections = links
-    .map((link) => document.querySelector(link.getAttribute("href")))
-    .filter(Boolean);
+
+  const sectionPairs = links
+    .map((link) => {
+      const href = link.getAttribute("href") || "";
+      let hash = href.includes("#") ? href.split("#")[1] : "";
+      if (!hash && href.endsWith(".html")) {
+        const pageName = href.replace(".html", "").replace("index", "dashboard");
+        hash = pageName === "dashboard" ? "dashboard" : `${pageName}-section`;
+      }
+      const section = hash ? document.getElementById(hash) || document.querySelector(`#${hash}`) : null;
+      return { link, section };
+    })
+    .filter((pair) => pair.section);
+
+  if (!sectionPairs.length) return;
+
   let ticking = false;
   const updateActive = () => {
-    let current = sections[0];
-    sections.forEach((section) => {
-      if (section.getBoundingClientRect().top <= window.innerHeight * 0.42) current = section;
+    let currentPair = sectionPairs[0];
+    const threshold = window.innerHeight * 0.42;
+
+    sectionPairs.forEach((pair) => {
+      const rect = pair.section.getBoundingClientRect();
+      if (rect.top <= threshold && rect.bottom > 0) {
+        currentPair = pair;
+      }
     });
+
     links.forEach((link) => {
-      link.classList.toggle("active", link.getAttribute("href") === `#${current.id}`);
+      const isCurrent = link === currentPair.link;
+      link.classList.toggle("active", isCurrent);
+      if (isCurrent) {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
     });
     ticking = false;
   };
+
   const requestUpdate = () => {
     if (ticking) return;
     ticking = true;
     requestAnimationFrame(updateActive);
   };
+
   window.addEventListener("scroll", requestUpdate, { passive: true });
   window.addEventListener("resize", requestUpdate);
   updateActive();
@@ -3760,6 +3808,52 @@ function bindNotificationControls() {
   });
 }
 
+function bindProfileModalControls() {
+  document.querySelectorAll("[data-open-profile-modal]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const modal = document.querySelector("[data-profile-modal]");
+      if (!modal) return;
+      modal.hidden = false;
+      modal.style.display = "grid";
+      const form = modal.querySelector("[data-edit-profile-form]");
+      if (form) {
+        const usernameInput = form.querySelector('[name="username"]');
+        const handleInput = form.querySelector('[name="handle"]');
+        if (usernameInput) usernameInput.value = state.userProfile?.username || authDisplayName();
+        if (handleInput) handleInput.value = state.userProfile?.handle || "@user_01";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-close-profile-modal]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const modal = document.querySelector("[data-profile-modal]");
+      if (modal) {
+        modal.hidden = true;
+        modal.style.display = "none";
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-edit-profile-form]").forEach((form) => {
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const formData = new FormData(form);
+      const username = String(formData.get("username") || "").trim();
+      const handle = String(formData.get("handle") || "").trim();
+      if (!state.userProfile) state.userProfile = {};
+      state.userProfile.username = username;
+      state.userProfile.handle = handle;
+      saveAndRender();
+      const modal = document.querySelector("[data-profile-modal]");
+      if (modal) {
+        modal.hidden = true;
+        modal.style.display = "none";
+      }
+    });
+  });
+}
+
 async function initializeApp() {
   document.body.classList.add("is-auth-loading");
   ensureAuthScreen();
@@ -3773,6 +3867,7 @@ async function initializeApp() {
   bindButtonMotion();
   bindScrollNav();
   bindNotificationControls();
+  bindProfileModalControls();
   initSupabaseClient();
 
   if (isLocalPreview()) {
