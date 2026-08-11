@@ -942,12 +942,7 @@ function deadlineFieldMarkup({ id, value = "", required = false, label = "Deadli
   return `
     <div class="form-field date-field deadline-date-field ${required ? "is-required-date" : ""}" data-date-field ${required ? "data-required-date" : ""}>
       <label for="${escapeHtml(id)}">${escapeHtml(label)}</label>
-      <button class="date-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-describedby="${escapeHtml(id)}-hint">
-        <span class="date-value" data-date-value id="${escapeHtml(id)}-hint">Pick a deadline</span>
-        <span class="date-icon" aria-hidden="true"></span>
-      </button>
-      <input id="${escapeHtml(id)}" name="deadline" type="hidden" value="${escapeHtml(value)}" data-date-input>
-      <div class="date-popover" data-date-popover hidden role="dialog" aria-label="Choose ${escapeHtml(label.toLowerCase())}"></div>
+      <input id="${escapeHtml(id)}" name="deadline" type="date" value="${escapeHtml(value)}" data-date-input class="custom-date-picker" aria-label="${escapeHtml(label)}">
     </div>
   `;
 }
@@ -2219,8 +2214,29 @@ function saveAndRender() {
 }
 
 function renderTodayReadouts() {
+  const d = new Date();
+  const dayName = d.toLocaleDateString(undefined, { weekday: "long" });
+  const dayNum = d.getDate();
+  const monthName = d.toLocaleDateString(undefined, { month: "short" });
+  const year = d.getFullYear();
+  const fullDateStr = `${dayName}, ${dayNum} ${monthName} ${year}`;
+  const liveTimeStr = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+
   document.querySelectorAll("[data-today-readout]").forEach((readout) => {
-    readout.innerHTML = `<span>Today</span><strong>${formatTodayReadout()}</strong><small>${formatCurrentTimeReadout()}</small>`;
+    readout.innerHTML = `
+      <div class="today-time-tracker" style="display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; background: rgba(0, 246, 255, 0.06); border: 1px solid rgba(0, 246, 255, 0.28); border-radius: 10px; box-shadow: 0 0 16px rgba(0, 246, 255, 0.08);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15;">
+          <span style="font-size: 0.72rem; color: #00ffd0; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;">${fullDateStr}</span>
+          <strong style="font-size: 0.88rem; color: #ffffff; font-weight: 900; font-family: monospace; letter-spacing: 0.05em;">${liveTimeStr}</strong>
+        </div>
+      </div>
+    `;
   });
 }
 
@@ -2659,68 +2675,14 @@ function bindDateHints() {
   document.querySelectorAll("[data-date-field]").forEach((field) => {
     if (field.dataset.dateBound === "true") return;
     const input = field.querySelector("[data-date-input]");
-    const trigger = field.querySelector("[data-date-trigger]");
-    const popover = field.querySelector("[data-date-popover]");
-    if (!input || !trigger || !popover) return;
+    if (!input) return;
     field.dataset.dateBound = "true";
 
-    trigger.addEventListener("click", (event) => {
-      event.stopPropagation();
+    input.addEventListener("change", () => {
       field.classList.remove("has-date-error");
-      if (field.classList.contains("is-open")) {
-        closeDateCalendar(field);
-      } else {
-        openDateCalendar(field);
-      }
-    });
-
-    trigger.addEventListener("keydown", (event) => {
-      if (event.key !== "Enter" && event.key !== " ") return;
-      event.preventDefault();
-      event.stopPropagation();
-      openDateCalendar(field);
-    });
-
-    popover.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const nav = event.target.closest("[data-date-nav]");
-      if (nav) {
-        const view = calendarViewDate(field);
-        view.setMonth(view.getMonth() + Number(nav.dataset.dateNav));
-        setCalendarView(field, view);
-        renderDateCalendar(field);
-        popover.hidden = false;
-        trigger.setAttribute("aria-expanded", "true");
-        field.classList.add("is-open");
-        return;
-      }
-
-      const day = event.target.closest("[data-date-day]");
-      if (!day) return;
-      input.value = day.dataset.dateDay;
-      field.classList.remove("has-date-error");
-      setCalendarView(field, dateFromValue(input.value) || calendarViewDate(field));
-      syncDateHints();
-      renderDateCalendar(field);
-      closeDateCalendar(field);
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+      field.classList.toggle("has-date", Boolean(input.value));
     });
   });
-
-  if (!dateDocumentListenersBound) {
-    document.addEventListener("click", (event) => {
-      if (!event.target.isConnected || event.target.closest("[data-date-field]")) return;
-      closeAllDateCalendars();
-    });
-
-    document.addEventListener("keydown", (event) => {
-      if (event.key === "Escape") closeAllDateCalendars();
-    });
-    dateDocumentListenersBound = true;
-  }
-
-  syncDateHints();
 }
 
 function requireTaskDeadline(form) {
@@ -2728,10 +2690,7 @@ function requireTaskDeadline(form) {
   const input = field?.querySelector("[data-date-input]");
   if (dateFromValue(input?.value)) return true;
   field?.classList.add("has-date-error");
-  if (field) {
-    openDateCalendar(field);
-    field.querySelector("[data-date-trigger]")?.focus();
-  }
+  input?.focus();
   return false;
 }
 
@@ -3943,6 +3902,9 @@ async function initializeApp() {
   setAuthVisibility();
   window.setInterval(() => {
     renderTodayReadouts();
+  }, 1000);
+
+  window.setInterval(() => {
     renderEndOfDayReminders();
     evaluateRemindersAndDeadlines();
   }, 60000);
