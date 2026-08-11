@@ -2201,6 +2201,23 @@ function renderStreaks() {
   toggleEmpty("streaks", state.habits.length === 0);
 }
 
+function render() {
+  syncMetrics();
+  renderCategories();
+  renderGoals();
+  renderHabits();
+  renderTasks();
+  render21DayHabitsSection();
+  renderNotificationsSection();
+  renderTodayReadouts();
+  bindDateHints();
+}
+
+function saveAndRender() {
+  saveState(state);
+  render();
+}
+
 function renderTodayReadouts() {
   document.querySelectorAll("[data-today-readout]").forEach((readout) => {
     readout.innerHTML = `<span>Today</span><strong>${formatTodayReadout()}</strong><small>${formatCurrentTimeReadout()}</small>`;
@@ -2687,12 +2704,13 @@ function bindDateHints() {
       syncDateHints();
       renderDateCalendar(field);
       closeDateCalendar(field);
+      input.dispatchEvent(new Event("change", { bubbles: true }));
     });
   });
 
   if (!dateDocumentListenersBound) {
     document.addEventListener("click", (event) => {
-      if (event.target.closest("[data-date-field]")) return;
+      if (!event.target.isConnected || event.target.closest("[data-date-field]")) return;
       closeAllDateCalendars();
     });
 
