@@ -942,7 +942,12 @@ function deadlineFieldMarkup({ id, value = "", required = false, label = "Deadli
   return `
     <div class="form-field date-field deadline-date-field ${required ? "is-required-date" : ""}" data-date-field ${required ? "data-required-date" : ""}>
       <label for="${escapeHtml(id)}">${escapeHtml(label)}</label>
-      <input id="${escapeHtml(id)}" name="deadline" type="date" value="${escapeHtml(value)}" data-date-input class="custom-date-picker" aria-label="${escapeHtml(label)}">
+      <button class="date-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false" aria-describedby="${escapeHtml(id)}-hint">
+        <span class="date-value" data-date-value id="${escapeHtml(id)}-hint">Pick a deadline</span>
+        <span class="date-icon" aria-hidden="true"></span>
+      </button>
+      <input id="${escapeHtml(id)}" name="deadline" type="hidden" value="${escapeHtml(value)}" data-date-input>
+      <div class="date-popover" data-date-popover hidden role="dialog" aria-label="Choose ${escapeHtml(label.toLowerCase())}"></div>
     </div>
   `;
 }
@@ -2206,6 +2211,7 @@ function render() {
   renderNotificationsSection();
   renderTodayReadouts();
   bindDateHints();
+  enhanceCustomSelects();
 }
 
 function saveAndRender() {
@@ -2675,22 +2681,190 @@ function bindDateHints() {
   document.querySelectorAll("[data-date-field]").forEach((field) => {
     if (field.dataset.dateBound === "true") return;
     const input = field.querySelector("[data-date-input]");
-    if (!input) return;
+    const trigger = field.querySelector("[data-date-trigger]");
+    const popover = field.querySelector("[data-date-popover]");
+    if (!input || !trigger || !popover) return;
     field.dataset.dateBound = "true";
 
-    input.addEventListener("change", () => {
+    const handleToggle = (event) => {
+      event.preventDefault();
+      event.stopPropagation();
       field.classList.remove("has-date-error");
-      field.classList.toggle("has-date", Boolean(input.value));
+      if (field.classList.contains("is-open")) {
+        closeDateCalendar(field);
+      } else {
+        openDateCalendar(field);
+      }
+    };
+
+    trigger.addEventListener("click", handleToggle);
+    trigger.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") handleToggle(event);
+    });
+
+    popover.addEventListener("click", (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const nav = event.target.closest("[data-date-nav]");
+      if (nav) {
+        const view = calendarViewDate(field);
+        view.setMonth(view.getMonth() + Number(nav.dataset.dateNav));
+        setCalendarView(field, view);
+        renderDateCalendar(field);
+        popover.hidden = false;
+        trigger.setAttribute("aria-expanded", "true");
+        field.classList.add("is-open");
+        return;
+      }
+
+      const day = event.target.closest("[data-date-day]");
+      if (!day) return;
+      input.value = day.dataset.dateDay;
+      field.classList.remove("has-date-error");
+      setCalendarView(field, dateFromValue(input.value) || calendarViewDate(field));
+      syncDateHints();
+      renderDateCalendar(field);
+      closeDateCalendar(field);
+      input.dispatchEvent(new Event("change", { bubbles: true }));
     });
   });
+
+  if (!dateDocumentListenersBound) {
+    document.addEventListener("click", (event) => {
+      if (!event.target.isConnected || event.target.closest("[data-date-field]")) return;
+      closeAllDateCalendars();
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") closeAllDateCalendars();
+    });
+    dateDocumentListenersBound = true;
+  }
+
+  syncDateHints();
 }
+
+function enhanceCustomSelects() {
+  document.querySelectorAll("form select, .custom-select-target").forEach((select) => {
+    if (select.dataset.customSelectInit === "true" || select.dataset.noCustomSelect === "true") return;
+    select.dataset.customSelectInit = "true";
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "custom-select-wrapper";
+    select.parentNode.insertBefore(wrapper, select);
+    wrapper.appendChild(select);
+    select.style.display = "none";
+
+    const trigger = document.createElement("button");
+    trigger.type = "button";
+    trigger.className = "custom-select-trigger";
+    trigger.setAttribute("aria-haspopup", "listbox");
+    trigger.setAttribute("aria-expanded", "false");
+
+    const textSpan = document.createElement("span");
+    textSpan.className = "custom-select-text";
+
+    const arrowSvg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    arrowSvg.setAttribute("class", "custom-select-arrow");
+    arrowSvg.setAttribute("width", "14");
+    arrowSvg.setAttribute("height", "14");
+    arrowSvg.setAttribute("viewBox", "0 0 24 24");
+    arrowSvg.setAttribute("fill", "none");
+    arrowSvg.setAttribute("stroke", "#00f6ff");
+    arrowSvg.setAttribute("stroke-width", "2.5");
+    arrowSvg.setAttribute("stroke-linecap", "round");
+    arrowSvg.setAttribute("stroke-linejoin", "round");
+    arrowSvg.innerHTML = `<polyline points="6 9 12 15 18 9"></polyline>`;
+
+    trigger.appendChild(textSpan);
+    trigger.appendChild(arrowSvg);
+    wrapper.appendChild(trigger);
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "custom-select-dropdown";
+    dropdown.hidden = true;
+    wrapper.appendChild(dropdown);
+
+    const syncOptions = () => {
+      const selectedOption = select.options[select.selectedIndex];
+      textSpan.textContent = selectedOption ? selectedOption.text : "Select option";
+      
+      dropdown.innerHTML = "";
+      Array.from(select.options).forEach((opt, idx) => {
+        const item = document.createElement("div");
+        item.className = `custom-select-option ${idx === select.selectedIndex ? "is-selected" : ""}`;
+        item.textContent = opt.text;
+        item.dataset.value = opt.value;
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          select.selectedIndex = idx;
+          select.value = opt.value;
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+          syncOptions();
+          closeDropdown();
+        });
+        dropdown.appendChild(item);
+      });
+    };
+
+    const openDropdown = () => {
+      document.querySelectorAll(".custom-select-wrapper.is-open").forEach((w) => {
+        if (w !== wrapper) {
+          w.classList.remove("is-open");
+          const d = w.querySelector(".custom-select-dropdown");
+          const t = w.querySelector(".custom-select-trigger");
+          if (d) d.hidden = true;
+          if (t) t.setAttribute("aria-expanded", "false");
+        }
+      });
+      syncOptions();
+      dropdown.hidden = false;
+      trigger.setAttribute("aria-expanded", "true");
+      wrapper.classList.add("is-open");
+    };
+
+    const closeDropdown = () => {
+      dropdown.hidden = true;
+      trigger.setAttribute("aria-expanded", "false");
+      wrapper.classList.remove("is-open");
+    };
+
+    trigger.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (wrapper.classList.contains("is-open")) {
+        closeDropdown();
+      } else {
+        openDropdown();
+      }
+    });
+
+    select.addEventListener("change", syncOptions);
+    syncOptions();
+  });
+}
+
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".custom-select-wrapper")) {
+    document.querySelectorAll(".custom-select-wrapper.is-open").forEach((w) => {
+      w.classList.remove("is-open");
+      const d = w.querySelector(".custom-select-dropdown");
+      const t = w.querySelector(".custom-select-trigger");
+      if (d) d.hidden = true;
+      if (t) t.setAttribute("aria-expanded", "false");
+    });
+  }
+});
 
 function requireTaskDeadline(form) {
   const field = form.querySelector("[data-required-date]");
   const input = field?.querySelector("[data-date-input]");
   if (dateFromValue(input?.value)) return true;
   field?.classList.add("has-date-error");
-  input?.focus();
+  if (field) {
+    openDateCalendar(field);
+    field.querySelector("[data-date-trigger]")?.focus();
+  }
   return false;
 }
 

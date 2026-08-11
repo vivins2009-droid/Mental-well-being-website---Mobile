@@ -328,7 +328,12 @@
 
             <div class="form-field date-field" data-date-field>
               <label for="goal-deadline-mobile">Deadline</label>
-              <input id="goal-deadline-mobile" name="deadline" type="date" class="custom-date-picker" data-date-input aria-label="Choose deadline">
+              <button class="date-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false">
+                <span class="date-value" data-date-value id="goal-date-hint-mobile">Pick a deadline</span>
+                <span class="date-icon" aria-hidden="true"></span>
+              </button>
+              <input id="goal-deadline-mobile" name="deadline" type="hidden" data-date-input>
+              <div class="date-popover" data-date-popover hidden role="dialog" aria-label="Choose deadline"></div>
             </div>
 
             <label class="full-width">
@@ -490,7 +495,12 @@
             </label>
             <div class="form-field date-field deadline-date-field" data-date-field data-required-date>
               <label for="task-deadline-mobile">Deadline</label>
-              <input id="task-deadline-mobile" name="deadline" type="date" class="custom-date-picker" data-date-input aria-label="Choose task deadline">
+              <button class="date-trigger" type="button" data-date-trigger aria-haspopup="dialog" aria-expanded="false">
+                <span class="date-value" data-date-value id="task-date-hint-mobile">Pick deadline</span>
+                <span class="date-icon" aria-hidden="true"></span>
+              </button>
+              <input id="task-deadline-mobile" name="deadline" type="hidden" data-date-input>
+              <div class="date-popover" data-date-popover hidden role="dialog" aria-label="Choose task deadline"></div>
             </div>
             <label>
               Task Type
