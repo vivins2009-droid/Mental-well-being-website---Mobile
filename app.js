@@ -290,35 +290,25 @@ function userEmail() {
 }
 
 function setAuthVisibility() {
-  const isConfigured = Boolean(supabaseClient) || isLocalPreview();
-  const isAuth = Boolean(currentUser);
+  const isConfigured = Boolean(supabaseClient);
+  const hasGuestMode = localStorage.getItem("planwell_guest_mode") === "1";
+  const isAuth = Boolean(currentUser) || hasGuestMode;
   
-  if (window.isAuthPreviewActive) {
-    ensureAuthScreen();
-    bindAuthControls();
-    const authScreen = document.querySelector("[data-auth-screen]");
-    if (authScreen) {
-      authScreen.style.setProperty("display", "grid", "important");
-      authScreen.hidden = false;
-      if (authScreen.querySelector("[data-auth-setup]")) {
-        authScreen.querySelector("[data-auth-setup]").hidden = isConfigured;
-      }
-    }
-    renderAccountControls();
-    return;
-  }
-
-  document.body.classList.toggle("is-authenticated", isAuth || isLocalPreview());
-  document.body.classList.toggle("is-logged-out", !isAuth && !isLocalPreview());
+  document.body.classList.toggle("is-authenticated", isAuth);
+  document.body.classList.toggle("is-logged-out", !isAuth);
   document.body.classList.toggle("is-auth-unconfigured", !isConfigured && !isLocalPreview());
   document.body.classList.remove("is-auth-loading");
 
+  ensureAuthScreen();
+  bindAuthControls();
+
   const authScreen = document.querySelector("[data-auth-screen]");
   if (authScreen) {
-    if (isLocalPreview() || isAuth) {
+    if (isAuth && !window.isAuthPreviewActive) {
       authScreen.style.setProperty("display", "none", "important");
+      authScreen.hidden = true;
     } else {
-      authScreen.style.removeProperty("display");
+      authScreen.style.setProperty("display", "grid", "important");
       authScreen.hidden = false;
     }
     if (authScreen.querySelector("[data-auth-setup]")) {
@@ -2279,13 +2269,14 @@ function ensureAuthScreen() {
       </form>
 
       <p class="auth-status" data-auth-status aria-live="polite"></p>
-      <button class="ghost-button compact-button" type="button" data-close-auth-screen style="margin-top: 6px; font-size: 0.8rem; border-color: rgba(0,246,255,0.3); color: #00f6ff;">&larr; Return to App / Dashboard</button>
+      <button class="ghost-button compact-button" type="button" data-guest-bypass style="margin-top: 6px; font-size: 0.82rem; border-color: rgba(0,246,255,0.35); color: #00f6ff; width: 100%;">Explore Dashboard (Guest Mode)</button>
     </article>
   `;
   document.body.prepend(screen);
 }
 
 function openAuthScreen() {
+  window.isAuthPreviewActive = true;
   ensureAuthScreen();
   bindAuthControls();
   const screen = document.querySelector("[data-auth-screen]");
@@ -2301,10 +2292,13 @@ function bindAuthControls() {
   screen.dataset.bound = "1";
   let mode = "login";
 
-  screen.querySelector("[data-close-auth-screen]")?.addEventListener("click", () => {
-    localStorage.removeItem("planwell_force_auth");
-    screen.style.setProperty("display", "none", "important");
-    screen.hidden = true;
+  screen.querySelector("[data-guest-bypass]")?.addEventListener("click", () => {
+    localStorage.setItem("planwell_guest_mode", "1");
+    window.isAuthPreviewActive = false;
+    if (!currentUser) {
+      currentUser = { id: "local-guest", email: "guest@localhost", user_metadata: { full_name: "Local Guest" } };
+    }
+    setAuthVisibility();
   });
 
   const setMode = (nextMode) => {
@@ -2436,6 +2430,8 @@ function renderAccountControls() {
       confirmLabel: "Log out",
       onConfirm: async () => {
         if (supabaseClient) await supabaseClient.auth.signOut();
+        localStorage.removeItem("planwell_guest_mode");
+        window.isAuthPreviewActive = false;
         authSession = null;
         currentUser = null;
         applyState(createEmptyState());
