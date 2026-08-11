@@ -2,36 +2,36 @@
 
 A high-performance, responsive web application designed for teens and young adults to set goals, build daily habits, track tasks, earn XP, and stay motivated.
 
-Built with a futuristic deep-space cyan aesthetic, glassmorphic UI elements, and zero emoji clutter, **Plan Well Mobile** offers a seamless single-page application (SPA) experience optimized for smartphones and tablets.
+Built with a futuristic deep-space cyan aesthetic, glassmorphic UI elements, and zero emoji clutter, Plan Well Mobile offers a seamless single-page application (SPA) experience optimized for smartphones and tablets.
 
 ---
 
 ## Key Features
 
-### 🧠 21-Day Habit Psychology Protocol
+### 21-Day Habit Psychology Protocol
 - **Neural Rewiring Tracker:** Grounded in habit formation science, tracking 21 consecutive days to turn daily routines into permanent neural pathways.
-- **Streak Counters & Level Milestones:** Earn a **+500 XP Boost** upon completing 21 days for any habit.
+- **Streak Counters & Level Milestones:** Earn a +500 XP Boost upon completing 21 days for any habit.
 - **Instant Check-ins:** One-tap habit logging with streak visualization.
 
-### 🎯 Goals & Mission Planner
+### Goals & Mission Planner
 - **Micro-Step Breakdown:** Deconstruct long-term goals into actionable micro-steps.
 - **Direct Habit Linking:** Connect specific micro-steps directly to daily habit routines with auto-prefilled goal parameters.
 
-### 📋 Task Board & To-Dos
+### Task Board & To-Dos
 - **One-off Quick Actions:** Organize homework, projects, and personal tasks.
 - **Goal & Habit Support:** Link tasks directly to larger goals or daily habits.
 - **Overdue Warnings & Deadline Hints:** Color-coded deadline triggers and native date pickers.
 
-### ⏱️ Activity Time Tracker
+### Activity Time Tracker
 - **Integrated Timer:** Track time spent studying, reading, or working out.
 - **Session History:** Log active sessions directly to your personal activity history.
 
-### 🏆 XP, Levels & Friends Leaderboard
+### XP, Levels & Friends Leaderboard
 - **Gamified Rewards:** Earn XP for habits checked, tasks completed, and goals achieved.
 - **Level Progress & Unlocks:** Track level progression with glowing progress rings.
 - **Friends Social Network:** Add friends via unique handles and compete on the live leaderboard.
 
-### 🔐 Authentication & Cloud Sync
+### Authentication & Cloud Sync
 - **Supabase Backend:** Secure email/password login, magic links, and Google OAuth integration.
 - **Offline / Local Fallback:** Full offline support using local storage caching.
 
@@ -65,7 +65,7 @@ mobile interface/
 ## Getting Started
 
 ### Running Locally
-To launch the mobile interface locally on port `8081`:
+To launch the mobile interface locally on port 8081:
 
 Using PowerShell:
 ```powershell
@@ -76,10 +76,10 @@ Or using Python:
 python -m http.server 8081 --directory "mobile interface"
 ```
 
-Open your browser at: `http://localhost:8081`
+Open your browser at: http://localhost:8081
 
 ---
 
 ## License
 
-Distributed under the MIT License. See `LICENSE` for details.
+Distributed under the MIT License. See LICENSE for details.
