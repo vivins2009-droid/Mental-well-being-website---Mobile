@@ -2231,20 +2231,7 @@ function renderTodayReadouts() {
   const liveTimeStr = d.toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
 
   document.querySelectorAll("[data-today-readout]").forEach((readout) => {
-    readout.innerHTML = `
-      <div class="today-time-tracker" style="display: inline-flex; align-items: center; gap: 10px; padding: 6px 14px; background: rgba(0, 246, 255, 0.06); border: 1px solid rgba(0, 246, 255, 0.28); border-radius: 10px; box-shadow: 0 0 16px rgba(0, 246, 255, 0.08);">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00f6ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15;">
-          <span style="font-size: 0.72rem; color: #00ffd0; font-weight: 800; letter-spacing: 0.03em; text-transform: uppercase;">${fullDateStr}</span>
-          <strong style="font-size: 0.88rem; color: #ffffff; font-weight: 900; font-family: monospace; letter-spacing: 0.05em;">${liveTimeStr}</strong>
-        </div>
-      </div>
-    `;
+    readout.innerHTML = `<span>${fullDateStr}</span><strong>${liveTimeStr}</strong>`;
   });
 }
 
@@ -2700,68 +2687,69 @@ function syncDateHints() {
 }
 
 function bindDateHints() {
-  document.querySelectorAll("[data-date-field]").forEach((field) => {
-    if (field.dataset.dateBound === "true") return;
-    const input = field.querySelector("[data-date-input]");
-    const trigger = field.querySelector("[data-date-trigger]");
-    const popover = field.querySelector("[data-date-popover]");
-    if (!input || !trigger || !popover) return;
-    field.dataset.dateBound = "true";
+  if (!dateDocumentListenersBound) {
+    document.addEventListener("click", (event) => {
+      const popoverNav = event.target.closest("[data-date-nav]");
+      const popoverDay = event.target.closest("[data-date-day]");
+      const trigger = event.target.closest("[data-date-trigger]") || event.target.closest(".date-trigger");
+      const field = event.target.closest("[data-date-field]") || (trigger?.closest(".date-field"));
 
-    const handleToggle = (event) => {
-      if (event.target.closest("[data-date-popover]")) return;
-      event.preventDefault();
-      event.stopPropagation();
-      field.classList.remove("has-date-error");
-      if (field.classList.contains("is-open")) {
-        closeDateCalendar(field);
-      } else {
-        openDateCalendar(field);
-      }
-    };
-
-    field.addEventListener("click", handleToggle);
-    trigger.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") handleToggle(event);
-    });
-
-    popover.addEventListener("click", (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const nav = event.target.closest("[data-date-nav]");
-      if (nav) {
+      if (popoverNav && field) {
+        event.preventDefault();
+        event.stopPropagation();
         const view = calendarViewDate(field);
-        view.setMonth(view.getMonth() + Number(nav.dataset.dateNav));
+        view.setMonth(view.getMonth() + Number(popoverNav.dataset.dateNav));
         setCalendarView(field, view);
         renderDateCalendar(field);
-        popover.hidden = false;
-        popover.style.display = "block";
-        trigger.setAttribute("aria-expanded", "true");
+        const popover = field.querySelector("[data-date-popover]");
+        if (popover) {
+          popover.hidden = false;
+          popover.style.display = "block";
+        }
         field.classList.add("is-open");
         return;
       }
 
-      const day = event.target.closest("[data-date-day]");
-      if (!day) return;
-      input.value = day.dataset.dateDay;
-      field.classList.remove("has-date-error");
-      setCalendarView(field, dateFromValue(input.value) || calendarViewDate(field));
-      syncDateHints();
-      renderDateCalendar(field);
-      closeDateCalendar(field);
-      input.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-  });
+      if (popoverDay && field) {
+        event.preventDefault();
+        event.stopPropagation();
+        const input = field.querySelector("[data-date-input]");
+        if (input) {
+          input.value = popoverDay.dataset.dateDay;
+          field.classList.remove("has-date-error");
+          setCalendarView(field, dateFromValue(input.value) || calendarViewDate(field));
+          syncDateHints();
+          renderDateCalendar(field);
+          closeDateCalendar(field);
+          input.dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        return;
+      }
 
-  if (!dateDocumentListenersBound) {
-    document.addEventListener("click", (event) => {
-      if (!event.target.isConnected || event.target.closest("[data-date-field]")) return;
+      if (event.target.closest("[data-date-popover]")) {
+        event.stopPropagation();
+        return;
+      }
+
+      if (field) {
+        event.preventDefault();
+        event.stopPropagation();
+        field.classList.remove("has-date-error");
+        if (field.classList.contains("is-open")) {
+          closeDateCalendar(field);
+        } else {
+          openDateCalendar(field);
+        }
+        return;
+      }
+
       closeAllDateCalendars();
     });
 
     document.addEventListener("keydown", (event) => {
       if (event.key === "Escape") closeAllDateCalendars();
     });
+
     dateDocumentListenersBound = true;
   }
 
